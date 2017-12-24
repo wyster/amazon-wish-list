@@ -230,4 +230,13 @@ promises.push(tests('de'));
 promises.push(tests('co.uk'));
 promises.push(tests('com'));
 
-Promise.all(promises);
+Promise.all(promises).then(() => {
+  test('de: product not available', function (t) {
+    t.plan(1);
+    
+    let awl = new AmazonWishList('de');
+    awl.getById('1FC8ADR5EZ7AU').then(function (result) {
+      t.ok(result.items.length === 0, 'Products not found');
+    });
+  });
+});

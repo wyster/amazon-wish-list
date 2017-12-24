@@ -70,10 +70,14 @@ class AmazonWishList {
       return new Promise((resolve, reject) => {
         const selectors = this.config.list.selectors;
         const $items = $(selectors.items);
-        var items = [];
+        const items = [];
   
         debug('found items: %o', $items.length);
         $items.each((index, element) => {
+          // product not available
+          if ($(selectors.itemId, element).length === 0) {
+            return;
+          }
           const title = $(selectors.itemTitle, element).text().trim();
           const id = $(selectors.itemId, element).attr('href').split('/')[2];
           const link = this.getItemUrl(id);
