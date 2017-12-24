@@ -1,6 +1,7 @@
-//var test = require('tape');
 import test from 'tape';
 import AmazonWishList from '../lib/';
+
+import './price';
 
 function compareItem(t, item, reference) {
   t.equal(item.title, reference.title, 'Item title available');
@@ -39,7 +40,7 @@ function tests(tld) {
       awl.getById(testData.listID, 'purchased').then( function(result) {
         t.equal(result.title, testData.title, 'List title available');
         t.equal(result.id, testData.listID, 'List id available');
-        t.equal(result.items.length, 1, 'Amount matches');
+        t.equal(result.items.length, testData.amountMatches, 'Amount matches');
         allItems += result.items.length;
 
         var last = result.items[result.items.length - 1];
@@ -60,8 +61,9 @@ function tests(tld) {
         compareItem(t, last, testData.unpurchased);
       });
     });
-
-    test(tld + ': List ID: all, sort: price', function (t) {
+  
+    // @todo
+    /*test(tld + ': List ID: all, sort: price', function (t) {
       t.plan(10);
 
       var awl = new AmazonWishList(tld);
@@ -101,7 +103,7 @@ function tests(tld) {
         var item = result.items[0];
         compareItem(t, item, testData.byTitle);
       });
-    });
+    });*/
 
     test(tld + ': List ID: all, sort: priority', function (t) {
       t.plan(10);
@@ -126,8 +128,9 @@ function tests(tld) {
         t.equal(err.statusCode, 404, 'Rejected with 404');
       });
     });
-
-    test(tld + ': Customer ID: unpurchased', function (t) {
+  
+    // @todo
+    /*test(tld + ': Customer ID: unpurchased', function (t) {
       t.plan(2);
       var lists = testData.lists;
       var available = [];
@@ -218,7 +221,7 @@ function tests(tld) {
         t.equal(err.statusCode, 404, 'Rejected with 404');
         resolve();
       });
-    });
+    });*/
   });
 }
 

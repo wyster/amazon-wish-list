@@ -4,13 +4,14 @@ module.exports = {
   lists: ['testing', 'testing_1', 'testing_2'],
   title: 'testing',
   itemCount: 26,
+  amountMatches: 1,
   unpurchased: {
-    title: 'The Simpsons: Complete Season 1 [DVD]',
-    id: 'B00005NGUN',
-    priority: 2,
-    comment: 'Just a test comment.',
+    title: 'The Simpsons - Season 2 [DVD]',
+    id: 'B00005UWTG',
+    priority: 0,
+    comment: '',
     currency: '£',
-    link: 'https://amazon.co.uk/dp/B00005NGUN'
+    link: 'https://amazon.co.uk/dp/B00005UWTG'
   },
   purchased: {
     title: 'The Simpsons - Season 7 (Ltd Edition \'Marge\' head) [DVD]',

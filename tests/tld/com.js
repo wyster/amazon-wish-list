@@ -4,20 +4,21 @@ module.exports = {
   lists: ['testing', 'testing_1', 'testing_2'],
   title: 'testing',
   itemCount: 26,
+  amountMatches: 1,
   unpurchased: {
-    title: 'The Simpsons: Season 1',
-    id: 'B007KFZ85K',
-    priority: 2,
-    comment: 'Just a test comment.',
-    currency: 'N/A',
-    link: 'https://amazon.com/dp/B007KFZ85K'
+    title: 'The Simpsons: Season 2',
+    id: 'B007KFZ7UQ',
+    priority: 0,
+    comment: '',
+    currency: '$',
+    link: 'https://amazon.com/dp/B007KFZ7UQ'
   },
   purchased: {
     title: 'Vandor 67066 The Simpsons "D\'Oh" 12 oz Ceramic Mug, Multicolor',
     id: 'B008HFUIDO',
     priority: 0,
     comment: '',
-    currency: '$',
+    currency: 'N/A',
     link: 'https://amazon.com/dp/B008HFUIDO'
   },
   byPrice: {
@@ -49,7 +50,7 @@ module.exports = {
     id: 'B007KFZ85K',
     priority: 2,
     comment: 'Just a test comment.',
-    currency: 'N/A',
+    currency: '$',
     link: 'https://amazon.com/dp/B007KFZ85K'
   }
 };

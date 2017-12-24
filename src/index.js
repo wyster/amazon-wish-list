@@ -1,5 +1,8 @@
 import rp from 'request-promise';
 import cheerio from 'cheerio';
+import * as priceHelper from './price';
+
+const debug = require('debug')('amazon-wish-list');
 
 class AmazonWishList {
   constructor(tld = 'de') {
@@ -11,55 +14,65 @@ class AmazonWishList {
       lists: {
         url: [this.baseUrl, 'gp/registry/wishlist/?cid='].join('/'),
         selectors: {
-          listLinks: '.wishlist-left-nav .g-left-nav-row a'
+          listLinks: "#your-lists-nav a[id^='wl-list-link-']"
         }
       },
       list: {
         url: [this.baseUrl, 'gp/registry/wishlist/'].join('/'),
         selectors: {
-          title: '#wl-list-info h1',
-          pageLinks: '.a-pagination li:not(.a-selected, .a-last) a',
-          items: '#item-page-wrapper .g-items-section>div.a-fixed-left-grid',
+          title: '#profile-list-name',
+          pageLinks: 'a.wl-see-more',
+          items: '#item-page-wrapper #g-items div.a-fixed-right-grid',
           itemTitle: 'h5',
           itemId: 'h5 a',
           itemPriority: '.g-item-comment-row span span.a-hidden',
-          itemComment: '.g-item-comment-row .g-comment-quote.a-text-quote',
-          itemPriceText: '.price-section .a-color-price'
+          itemComment: '.g-item-comment .g-comment-quote.a-text-quote',
+          itemPriceText: '.a-price .a-offscreen',
+          itemCurrency: '.a-price .a-price-symbol'
         }
       }
     };
-
-    this.getProfileUrl = function(cid) {
-      return [this.config.profile.url, cid].join('');
+  
+    this.getProfileUrl = function (cid) {
+      const uri = [this.config.profile.url, cid].join('');
+      debug('profile url %o', uri);
+      return uri;
     };
-
-    this.getListsUrl = function(cid) {
-      return [this.config.lists.url, cid].join('');
+  
+    this.getListsUrl = function (cid) {
+      const uri = [this.config.lists.url, cid].join('');
+      debug('lists url %o', uri);
+      return uri;
     };
-
-    this.getListUrl = function(id) {
-      return [this.config.list.url, id].join('');
+  
+    this.getListUrl = function (id) {
+      const uri = [this.config.list.url, id].join('');
+      debug('list url %o', uri);
+      return uri;
     };
-
-    this.getItemUrl = function(id) {
+  
+    this.getItemUrl = function (id) {
       return [this.baseUrl, 'dp', id].join('/');
     };
-
-    this.getPage = function(url) {
+  
+    this.getPage = function (url) {
+      const uri = [this.baseUrl, url].join('');
+      debug('fetch page %o', uri);
       var options = {
-        uri: [this.baseUrl, url].join(''),
+        uri: uri,
         transform: (body) => cheerio.load(body)
       };
-
-      return rp(options).then(($) => this.getItems($));
+    
+      return rp(options);
     }
-
-    this.getItems = function($) {
+  
+    this.getItems = function ($) {
       return new Promise((resolve, reject) => {
         const selectors = this.config.list.selectors;
         const $items = $(selectors.items);
         var items = [];
-
+  
+        debug('found items: %o', $items.length);
         $items.each((index, element) => {
           const title = $(selectors.itemTitle, element).text().trim();
           const id = $(selectors.itemId, element).attr('href').split('/')[2];
@@ -67,107 +80,116 @@ class AmazonWishList {
           const priority = parseInt($(selectors.itemPriority, element).text().trim()) | 0;
           const comment = $(selectors.itemComment, element).text().trim();
           let priceText = $(selectors.itemPriceText, element).text().trim();
-          let currency = 'N/A';
-          let price = 'N/A';
-          if(priceText) {
-            priceText = priceText.replace('.', '').trim();
-            priceText = priceText.replace(',', '.').trim();
-            const re = /(\D*)(.*)/;
-            const result = re.exec(priceText);
-
-            if(result.length < 3) {
-              reject('Could not parse item price.')
-            }
-
-            currency = result[1].trim();
-            price = parseFloat(parseFloat(result[2]).toFixed(2));
-          }
-
+          let currency = $(selectors.itemCurrency, element).text().trim();
+          let price = priceHelper.getPrice(priceText);
+          
           items.push({
             id: id,
             title: title,
             link: link,
             priority: priority,
             comment: comment,
-            currency: currency,
-            price: price
+            currency: currency ? currency : 'N/A',
+            price: price ? price : 'N/A'
           });
         });
-
+  
         resolve(items);
       });
     }
   }
-
-  getByCid(cid, filter = 'unpurchased', sort = 'date') {
-    const options = { uri: this.getProfileUrl(cid) };
-
+  
+  getByCid(cid, filter = 'unpurchased', sort = '') {
+    const options = {uri: this.getProfileUrl(cid)};
+    
     return rp(options).then(() => {
       const options = {
         uri: this.getListsUrl(cid),
         transform: (body) => cheerio.load(body)
       };
-
+  
       return rp(options);
     }).then(($) => {
       var promises = [];
       var lists = [];
-
+  
       const $lists = $(this.config.lists.selectors.listLinks);
       $lists.each((index, item) => {
         const url = $(item).attr('href');
         const id = url.split('/')[4];
-
+  
         promises.push(this.getById(id, filter, sort));
       });
-
-      return Promise.all(promises).then(function(responses) {
-        for(let response of responses) {
+  
+      return Promise.all(promises).then(function (responses) {
+        for (let response of responses) {
           lists.push(response);
         }
-
+    
         return new Promise((resolve, reject) => resolve(lists));
       });
     });
   }
-
-  getById(id, filter = 'unpurchased', sort = 'date') {
+  
+  getById(id, filter = 'unpurchased', sort = '') {
     const selectors = this.config.list.selectors;
     const options = {
       uri: this.getListUrl(id),
       qs: {
-        reveal: filter,
-        sort: (sort !== 'priority') ? 'universal-' + sort : sort
+        filter: filter,
+        sort: sort
       },
       transform: (body) => cheerio.load(body)
     };
-
-    return rp(options).then(($) => {
-      var promises = [];
-      var list = {
-        title: $(selectors.title).text().trim(),
-        id: id,
-        items: []
-      };
-
-      /* Initial Page */
-      promises.push(this.getItems($));
-
-      /* Following pages */
+    
+    let pagesList = [];
+    
+    let fetchAllPages = () => {
+      return new Promise((resolve, reject) => {
+        rp(options).then(($) => {
+          pagesList.push($);
+          fetchNextPage($, resolve)
+        }).catch(reject);
+      });
+    };
+    
+    let fetchNextPage = ($, resolve) => {
       const $pages = $(selectors.pageLinks);
+      if (!$pages || $pages.length === 0) {
+        return resolve();
+      }
       $pages.each((index, element) => {
         const url = $(element).attr('href');
-
-        promises.push(this.getPage(url));
+        this.getPage(url).then(($) => {
+          pagesList.push($);
+          fetchNextPage($, resolve);
+        });
       });
-
-      return Promise.all(promises).then(function(responses) {
-        for(let response of responses) {
-          list.items = list.items.concat(response);
-        }
-
-        return new Promise((resolve, reject) => resolve(list));
-      });
+    };
+    
+    return new Promise((resolve, reject) => {
+      fetchAllPages().then(() => {
+        debug('pages count:', pagesList.length);
+        
+        const list = {
+          title: pagesList[0](selectors.title).text().trim(),
+          id: id,
+          items: []
+        };
+        
+        let items = [];
+        pagesList.forEach(($) => {
+          items.push(this.getItems($));
+        });
+        
+        Promise.all(items).then(function (responses) {
+          for (let response of responses) {
+            list.items = list.items.concat(response);
+          }
+          
+          resolve(list);
+        });
+      }).catch(reject);
     });
   }
 }
