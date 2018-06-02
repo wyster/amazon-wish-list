@@ -1,6 +1,7 @@
 import rp from 'request-promise';
 import cheerio from 'cheerio';
 import * as priceHelper from './price';
+import * as imageHelper from './image';
 
 const debug = require('debug')('amazon-wish-list');
 
@@ -22,13 +23,14 @@ class AmazonWishList {
         selectors: {
           title: '#profile-list-name',
           pageLinks: 'a.wl-see-more',
-          items: '#item-page-wrapper #g-items div.a-fixed-right-grid',
+          items: '#item-page-wrapper #g-items li',
           itemTitle: 'h3',
           itemId: 'h3 a',
           itemPriority: '.g-item-comment-row span span.a-hidden',
           itemComment: '.g-item-comment .g-comment-quote.a-text-quote',
           itemPriceText: '.a-price .a-offscreen',
-          itemCurrency: '.a-price .a-price-symbol'
+          itemCurrency: '.a-price .a-price-symbol',
+          itemImage: '.g-itemImage img'
         }
       }
     };
@@ -86,6 +88,7 @@ class AmazonWishList {
           let priceText = $(selectors.itemPriceText, element).text().trim();
           let currency = $(selectors.itemCurrency, element).text().trim();
           let price = priceHelper.getPrice(priceText);
+          let image = imageHelper.prepare($(selectors.itemImage, element).attr('src'));
           
           items.push({
             id: id,
@@ -94,7 +97,8 @@ class AmazonWishList {
             priority: priority,
             comment: comment,
             currency: currency ? currency : 'N/A',
-            price: price ? price : 'N/A'
+            price: price ? price : 'N/A',
+            image: image
           });
         });
   

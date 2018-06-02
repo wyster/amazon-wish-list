@@ -2,6 +2,7 @@ import test from 'tape';
 import AmazonWishList from '../lib/';
 
 import './price';
+import './image';
 
 function compareItem(t, item, reference) {
   t.equal(item.title, reference.title, 'Item title available');
