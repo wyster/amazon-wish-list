@@ -18,7 +18,7 @@ module.exports = {
     id: 'B000BX4JZI',
     priority: 0,
     comment: '',
-    currency: '£',
+    currency: 'N/A',
     link: 'https://amazon.co.uk/dp/B000BX4JZI'
   },
   byPrice: {

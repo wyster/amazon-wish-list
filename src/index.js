@@ -1,7 +1,18 @@
-import rp from 'request-promise';
+import request from 'request-promise';
 import cheerio from 'cheerio';
 import * as priceHelper from './price';
 import * as imageHelper from './image';
+import Debug from 'debug';
+
+if (Debug.enabled('amazon-wish-list')) {
+  request.debug = true;
+  //require('request-debug')(request)
+}
+
+const rp = request.defaults({
+  gzip: true,
+  transform: (body) => cheerio.load(body)
+});
 
 const debug = require('debug')('amazon-wish-list');
 
@@ -15,7 +26,7 @@ class AmazonWishList {
       lists: {
         url: [this.baseUrl, 'gp/registry/wishlist/?cid='].join('/'),
         selectors: {
-          listLinks: "#your-lists-nav a[id^='wl-list-link-']"
+          listLinks: '#your-lists-nav a[id^=\'wl-list-link-\']'
         }
       },
       list: {
@@ -61,8 +72,7 @@ class AmazonWishList {
       const uri = [this.baseUrl, url].join('');
       debug('fetch page %o', uri);
       var options = {
-        uri: uri,
-        transform: (body) => cheerio.load(body)
+        uri: uri
       };
     
       return rp(options);
@@ -112,8 +122,7 @@ class AmazonWishList {
     
     return rp(options).then(() => {
       const options = {
-        uri: this.getListsUrl(cid),
-        transform: (body) => cheerio.load(body)
+        uri: this.getListsUrl(cid)
       };
   
       return rp(options);
@@ -146,8 +155,7 @@ class AmazonWishList {
       qs: {
         filter: filter,
         sort: sort
-      },
-      transform: (body) => cheerio.load(body)
+      }
     };
     
     let pagesList = [];

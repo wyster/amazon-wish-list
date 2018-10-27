@@ -1,4 +1,4 @@
-"use strict";
+
 
 function format(priceText) {
   priceText = priceText.replace('.', '').trim();

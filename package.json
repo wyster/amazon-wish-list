@@ -5,9 +5,11 @@
   "main": "lib/index.js",
   "scripts": {
     "clean": "rm -rf lib",
-    "build": "npm run clean && ./node_modules/.bin/babel src --out-dir lib",
-    "test": "npm run build && ./node_modules/.bin/babel-node ./tests/index.js",
-    "lint": "./node_modules/.bin/eslint src",
+    "build": "npm run clean && npx babel src --out-dir lib",
+    "build::watch": "npm run clean && npx babel src --out-dir lib --watch",
+    "test": "npm run build && npx babel-node ./tests/index.js",
+    "lint": "npx eslint src",
+    "lint::fix": "npm run lint -- --fix",
     "prepublish": "npm run build",
     "preversion": "npm test"
   },
@@ -16,6 +18,7 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "request": "^2.83.0",
+    "request-debug": "^0.2.0",
     "request-promise": "^4.1.1"
   },
   "devDependencies": {
